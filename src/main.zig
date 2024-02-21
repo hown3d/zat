@@ -1,4 +1,7 @@
 const std = @import("std");
+const mem = std.mem;
+const fs = std.fs;
+const io = std.io;
 
 const ZatError = error{
     InvalidArgument,
@@ -35,22 +38,22 @@ fn processArgs() ZatError![]const u8 {
     };
 }
 
-fn openFile(allocator: std.mem.Allocator, file_path: []const u8) !std.fs.File {
-    const path = try std.fs.cwd().realpathAlloc(allocator, file_path);
-    return std.fs.openFileAbsolute(path, std.fs.File.OpenFlags{}) catch |err| {
+fn openFile(allocator: mem.Allocator, file_path: []const u8) !fs.File {
+    const path = try fs.cwd().realpathAlloc(allocator, file_path);
+    return fs.openFileAbsolute(path, fs.File.OpenFlags{}) catch |err| {
         return switch (err) {
-            std.fs.File.OpenError.FileNotFound => ZatError.FileNotFound,
+            fs.File.OpenError.FileNotFound => ZatError.FileNotFound,
             else => |leftover_err| return leftover_err,
         };
     };
 }
 
-fn readFileToStdout(allocator: std.mem.Allocator, file: std.fs.File) !void {
+fn readFileToStdout(allocator: mem.Allocator, file: fs.File) !void {
     const buf = try allocator.alloc(u8, BufSize);
     var bytes_read: usize = buf.len;
 
     while (bytes_read >= buf.len) {
         bytes_read = try file.readAll(buf);
-        _ = try std.io.getStdOut().write(buf[0..bytes_read]);
+        _ = try io.getStdOut().write(buf[0..bytes_read]);
     }
 }
